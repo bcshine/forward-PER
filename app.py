@@ -90,8 +90,10 @@ def get_financial_data(ticker_info):
         # 6. 부채비율
         
         data = {
+            '번호': 0, # Will be filled later
             '종목코드': code,
             '종목명': name,
+            '산업카테고리': None,
             '시가총액(억)': None,
             '현재 PER': None,
             '추정 PER': None,
@@ -102,6 +104,15 @@ def get_financial_data(ticker_info):
             '이익성장률': None,
             'DeltaPER': None
         }
+        
+        # 0. 산업카테고리 찾기 (section > h4 class='h_sub sub_tit7' -> a tag)
+        for sect in soup.find_all('div', {'class': 'section'}):
+            h4 = sect.find('h4', {'class': 'h_sub sub_tit7'})
+            if h4:
+                a_tag = sect.find('a')
+                if a_tag:
+                    data['산업카테고리'] = a_tag.text.strip()
+                break
         
         # 1. 시가총액 찾기
         # <em id="_market_sum">
@@ -300,21 +311,32 @@ def main():
         
     st.subheader(f"Filtered Results: {len(filtered_df)} stocks")
     
+    # Apply explicit sorting buttons
+    st.markdown("**(Tip: 아래 표의 컬럼 제목을 클릭하시면 오름차순/내림차순 정렬이 동작합니다.)**")
+    
+    # Fill the '번호' column properly after filtering
+    filtered_df = filtered_df.reset_index(drop=True)
+    filtered_df['번호'] = filtered_df.index + 1
+
+    # Desired Column Order:
+    # 번호, code, name, 산업카테고리, delta per, 12m fwd per, 현재 per, ROE, 부채비율, 이익성장율
+    cols_order = ['번호', '종목코드', '종목명', '산업카테고리', 'DeltaPER', '추정 PER', '현재 PER', '추정 ROE', '부채비율', '이익성장률']
+    # Keep other columns slightly to the side if needed, but display only these primarily.
+    
     # Display the dataframe with Streamlit
     st.dataframe(
-        filtered_df,
+        filtered_df[cols_order],
         column_config={
-            "종목코드": st.column_config.TextColumn("Code"),
-            "종목명": st.column_config.TextColumn("Name"),
-            "시가총액(억)": st.column_config.NumberColumn("시가총액(억)", format="%d"),
-            "현재 PER": st.column_config.NumberColumn("현재 PER", format="%.2f"),
-            "추정 PER": st.column_config.NumberColumn("12M FWD PER", format="%.2f"),
-            "DeltaPER": st.column_config.NumberColumn("Delta PER", format="%.2f"),
-            "이익성장률": st.column_config.NumberColumn("이익성장률", format="%.2f"),
+            "번호": st.column_config.NumberColumn("번호", format="%d"),
+            "종목코드": st.column_config.TextColumn("code"),
+            "종목명": st.column_config.TextColumn("name"),
+            "산업카테고리": st.column_config.TextColumn("산업카테고리"),
+            "DeltaPER": st.column_config.NumberColumn("delta per", format="%.2f"),
+            "추정 PER": st.column_config.NumberColumn("12m fwd per", format="%.2f"),
+            "현재 PER": st.column_config.NumberColumn("현재 per", format="%.2f"),
             "추정 ROE": st.column_config.NumberColumn("ROE", format="%.2f"),
-            "부채비율": st.column_config.NumberColumn("부채비율 (%)", format="%.2f"),
-            "전년 영업이익": st.column_config.NumberColumn("전년 영업이익", format="%.0f"),
-            "추정 영업이익": st.column_config.NumberColumn("추정 영업이익", format="%.0f"),
+            "부채비율": st.column_config.NumberColumn("부채비율", format="%.2f"),
+            "이익성장률": st.column_config.NumberColumn("이익성장율", format="%.2f"),
         },
         use_container_width=True,
         hide_index=True,
