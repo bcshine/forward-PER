@@ -275,7 +275,7 @@ def scrape_all_data(tickers):
     return pd.DataFrame(results), scrape_time
 
 def main():
-    st.title("📈 Forward PER Chart")
+    st.title("📈 Delta PER Table")
     
     with st.spinner("Fetching Top 500 Tickers..."):
         tickers = get_top_500_tickers()
@@ -290,23 +290,43 @@ def main():
     # Sidebar Filters
     st.sidebar.header("Filter Settings")
     
-    max_fwd_per = st.sidebar.number_input("Max 추정 PER (Forward PER)", value=12.0, step=1.0)
-    min_roe = st.sidebar.number_input("Min 추정 ROE (%)", value=15.0, step=1.0)
-    max_debt = st.sidebar.number_input("Max 부채비율 (%)", value=100.0, step=1.0)
-    min_mcap = st.sidebar.number_input("Min 시가총액 (억원)", value=5000, step=500)
+    apply_filters = st.sidebar.checkbox("필터 적용", value=True)
+    show_all_500 = st.sidebar.checkbox("결측치 포함(500개 보기)", value=False, help="필수 지표가 비어있는 종목도 표에 포함합니다.")
+    max_fwd_per = st.sidebar.number_input("Max 추정 PER (Forward PER)", value=9999.0, step=1.0, disabled=not apply_filters)
+    min_roe = st.sidebar.number_input("Min 추정 ROE (%)", value=-9999.0, step=1.0, disabled=not apply_filters)
+    max_debt = st.sidebar.number_input("Max 부채비율 (%)", value=9999.0, step=1.0, disabled=not apply_filters)
+    min_mcap = st.sidebar.number_input("Min 시가총액 (억원)", value=0, step=500, disabled=not apply_filters)
     
-    # 1. Dropna on critical columns
-    # Reverting to strict dropna now that scraping is fixed
-    filtered_df = df.dropna(subset=['추정 PER', '추정 ROE', '부채비율', '시가총액(억)'])
-    
-    # 2. Conditions
-    cond = (
-        (filtered_df['추정 PER'] <= max_fwd_per) &
-        (filtered_df['추정 ROE'] >= min_roe) &
-        (filtered_df['부채비율'] <= max_debt) &
-        (filtered_df['시가총액(억)'] >= min_mcap)
+    st.caption(
+        f"요약: 요청 종목 {len(tickers)}개 → 수집 결과 {len(df)}행"
     )
-    filtered_df = filtered_df[cond]
+
+    # 1) 결측치 처리: 기본은 엄격 모드(필수 지표가 없으면 제외)
+    if show_all_500:
+        filtered_df = df.copy()
+    else:
+        filtered_df = df.dropna(subset=['추정 PER', '추정 ROE', '부채비율', '시가총액(억)'])
+
+    st.caption(
+        f"결측치 제거 후 {len(filtered_df)}행"
+        + (" (결측치 포함 모드)" if show_all_500 else "")
+    )
+    
+    # 2) 필터 조건 (필터 적용 체크 시에만)
+    if apply_filters:
+        # 결측치 포함 모드에서는 비교 연산이 NaN을 False로 처리하게 두되,
+        # 최소한 숫자 비교 가능한 형태로만 변환합니다.
+        for c in ['추정 PER', '추정 ROE', '부채비율', '시가총액(억)']:
+            filtered_df[c] = pd.to_numeric(filtered_df[c], errors='coerce')
+
+        cond = (
+            (filtered_df['추정 PER'] <= max_fwd_per) &
+            (filtered_df['추정 ROE'] >= min_roe) &
+            (filtered_df['부채비율'] <= max_debt) &
+            (filtered_df['시가총액(억)'] >= min_mcap)
+        )
+        filtered_df = filtered_df[cond]
+        st.caption(f"필터 적용 후 {len(filtered_df)}행")
     
     if 'DeltaPER' in filtered_df.columns:
         filtered_df = filtered_df.sort_values(by='DeltaPER', ascending=False)
