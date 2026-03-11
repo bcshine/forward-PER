@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import time
+import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 st.set_page_config(layout="wide", page_title="Naver Finance Screener")
@@ -270,20 +271,21 @@ def scrape_all_data(tickers):
                 my_bar.progress(count / total, text=f"Scraping... {count}/{total} completed.")
                 
     my_bar.empty()
-    return pd.DataFrame(results)
+    scrape_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return pd.DataFrame(results), scrape_time
 
 def main():
-    st.title("🏆 Naver Finance stock Screener")
-    st.markdown("Filter and sort Top 500 KOSPI/KOSDAQ stocks based on your custom criteria.")
+    st.title("📈 Forward PER Chart")
     
     with st.spinner("Fetching Top 500 Tickers..."):
         tickers = get_top_500_tickers()
     
-    if st.button("🔄 Refresh Data (Clear Cache)"):
+    df, scrape_time = scrape_all_data(tickers)
+    st.markdown(f"**데이터 수집 일시:** {scrape_time}")
+    
+    if st.button("🔄 새로 크롤링하기"):
         st.cache_data.clear()
         st.rerun()
-
-    df = scrape_all_data(tickers)
     
     # Sidebar Filters
     st.sidebar.header("Filter Settings")
@@ -322,6 +324,14 @@ def main():
     # 번호, code, name, 산업카테고리, delta per, 12m fwd per, 현재 per, ROE, 부채비율, 이익성장율
     cols_order = ['번호', '종목코드', '종목명', '산업카테고리', 'DeltaPER', '추정 PER', '현재 PER', '추정 ROE', '부채비율', '이익성장률']
     # Keep other columns slightly to the side if needed, but display only these primarily.
+    
+    csv_data = filtered_df[cols_order].to_csv(index=False).encode('utf-8-sig')
+    st.download_button(
+        label="📥 엑셀(CSV) 다운로드",
+        data=csv_data,
+        file_name=f"forward_per_data.csv",
+        mime="text/csv",
+    )
     
     # Display the dataframe with Streamlit
     st.dataframe(
