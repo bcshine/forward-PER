@@ -294,8 +294,11 @@ def main():
     )
     
     # Sidebar Filters
-    st.sidebar.header("Filter Settings")
+    st.sidebar.header("Search & Filter")
     
+    search_query = st.sidebar.text_input("🔍 종목명/코드 검색", "", help="검색어를 입력하면 해당 종목만 표시됩니다.")
+    
+    st.sidebar.markdown("---")
     apply_filters = st.sidebar.checkbox("필터 적용", value=True)
     show_all_500 = st.sidebar.checkbox("결측치 포함(500개 보기)", value=False, help="필수 지표가 비어있는 종목도 표에 포함합니다.")
     max_fwd_per = st.sidebar.number_input("Max 추정 PER (Forward PER)", value=9999.0, step=1.0, disabled=not apply_filters)
@@ -333,6 +336,15 @@ def main():
         )
         filtered_df = filtered_df[cond]
         st.caption(f"필터 적용 후 {len(filtered_df)}행")
+    
+    # 3) 검색어 필터 (검색어가 있을 때만)
+    if search_query:
+        search_cond = (
+            filtered_df['종목명'].str.contains(search_query, case=False, na=False) |
+            filtered_df['종목코드'].str.contains(search_query, case=False, na=False)
+        )
+        filtered_df = filtered_df[search_cond]
+        st.caption(f"🔍 '{search_query}' 검색 결과 {len(filtered_df)}행")
     
     if 'DeltaPER' in filtered_df.columns:
         filtered_df = filtered_df.sort_values(by='DeltaPER', ascending=False)
