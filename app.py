@@ -286,6 +286,12 @@ def main():
     if st.button("🔄 새로 크롤링하기"):
         st.cache_data.clear()
         st.rerun()
+        
+    st.info(
+        "**💡 Delta PER란?**\n\n"
+        "**현재 PER에서 12개월 선행(Forward) 추정 PER을 뺀 값**(`현재 PER - 추정 PER`)입니다.\n\n"
+        "이 값이 **클수록** 향후 이익 성장이 기대되어, 현재 주가 대비 미래 밸류에이션 매력도가 높아질(저평가될) 종목을 의미합니다."
+    )
     
     # Sidebar Filters
     st.sidebar.header("Filter Settings")
@@ -341,8 +347,8 @@ def main():
     filtered_df['번호'] = filtered_df.index + 1
 
     # Desired Column Order:
-    # 번호, code, name, 산업카테고리, delta per, 12m fwd per, 현재 per, ROE, 부채비율, 이익성장율
-    cols_order = ['번호', '종목코드', '종목명', '산업카테고리', 'DeltaPER', '추정 PER', '현재 PER', '추정 ROE', '부채비율', '이익성장률']
+    # 번호, code, name, 산업카테고리, 시가총액(억), delta per, 현재 per, 12m fwd per, ROE, 부채비율, 이익성장율
+    cols_order = ['번호', '종목코드', '종목명', '산업카테고리', '시가총액(억)', 'DeltaPER', '현재 PER', '추정 PER', '추정 ROE', '부채비율', '이익성장률']
     # Keep other columns slightly to the side if needed, but display only these primarily.
     
     csv_data = filtered_df[cols_order].to_csv(index=False).encode('utf-8-sig')
@@ -361,9 +367,10 @@ def main():
             "종목코드": st.column_config.TextColumn("code"),
             "종목명": st.column_config.TextColumn("name"),
             "산업카테고리": st.column_config.TextColumn("산업카테고리"),
+            "시가총액(억)": st.column_config.NumberColumn("시가총액(억원)", format="localized", step=1),
             "DeltaPER": st.column_config.NumberColumn("delta per", format="%.2f"),
-            "추정 PER": st.column_config.NumberColumn("12m fwd per", format="%.2f"),
             "현재 PER": st.column_config.NumberColumn("현재 per", format="%.2f"),
+            "추정 PER": st.column_config.NumberColumn("12m fwd per", format="%.2f"),
             "추정 ROE": st.column_config.NumberColumn("ROE", format="%.2f"),
             "부채비율": st.column_config.NumberColumn("부채비율", format="%.2f"),
             "이익성장률": st.column_config.NumberColumn("이익성장율", format="%.2f"),
