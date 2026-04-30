@@ -306,6 +306,10 @@ def main():
     max_debt = st.sidebar.number_input("Max 부채비율 (%)", value=9999.0, step=1.0, disabled=not apply_filters)
     min_mcap = st.sidebar.number_input("Min 시가총액 (억원)", value=0, step=500, disabled=not apply_filters)
     
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📱 디스플레이 설정")
+    mobile_view = st.sidebar.checkbox("모바일 뷰 (핵심 지표만)", value=False, help="모바일 기기에서 표가 깨질 때 사용하세요.")
+    
     st.caption(
         f"요약: 요청 종목 {len(tickers)}개 → 수집 결과 {len(df)}행"
     )
@@ -372,24 +376,40 @@ def main():
     )
     
     # Display the dataframe with Streamlit
-    st.dataframe(
-        filtered_df[cols_order],
-        column_config={
-            "번호": st.column_config.NumberColumn("번호", format="%d"),
-            "종목코드": st.column_config.TextColumn("code"),
-            "종목명": st.column_config.TextColumn("name"),
-            "산업카테고리": st.column_config.TextColumn("산업카테고리"),
-            "시가총액(억)": st.column_config.NumberColumn("시가총액(억원)", format="localized", step=1),
-            "DeltaPER": st.column_config.NumberColumn("delta per", format="%.2f"),
-            "현재 PER": st.column_config.NumberColumn("현재 per", format="%.2f"),
-            "추정 PER": st.column_config.NumberColumn("12m fwd per", format="%.2f"),
-            "추정 ROE": st.column_config.NumberColumn("ROE", format="%.2f"),
-            "부채비율": st.column_config.NumberColumn("부채비율", format="%.2f"),
-            "이익성장률": st.column_config.NumberColumn("이익성장율", format="%.2f"),
-        },
-        use_container_width=True,
-        hide_index=True,
-    )
+    if mobile_view:
+        st.info("📱 모바일 뷰가 활성화되었습니다. (핵심 지표 3개만 표시됩니다)")
+        mobile_cols = ['종목명', 'DeltaPER', '현재 PER', '추정 PER']
+        
+        st.dataframe(
+            filtered_df[mobile_cols],
+            column_config={
+                "종목명": st.column_config.TextColumn("종목명", width=100),
+                "DeltaPER": st.column_config.NumberColumn("Delta", format="%.2f", width=60),
+                "현재 PER": st.column_config.NumberColumn("현재PER", format="%.2f", width=60),
+                "추정 PER": st.column_config.NumberColumn("선행PER", format="%.2f", width=60),
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.dataframe(
+            filtered_df[cols_order],
+            column_config={
+                "번호": st.column_config.NumberColumn("번호", format="%d"),
+                "종목코드": st.column_config.TextColumn("code"),
+                "종목명": st.column_config.TextColumn("name"),
+                "산업카테고리": st.column_config.TextColumn("산업카테고리"),
+                "시가총액(억)": st.column_config.NumberColumn("시가총액(억원)", format="localized", step=1),
+                "DeltaPER": st.column_config.NumberColumn("delta per", format="%.2f"),
+                "현재 PER": st.column_config.NumberColumn("현재 per", format="%.2f"),
+                "추정 PER": st.column_config.NumberColumn("12m fwd per", format="%.2f"),
+                "추정 ROE": st.column_config.NumberColumn("ROE", format="%.2f"),
+                "부채비율": st.column_config.NumberColumn("부채비율", format="%.2f"),
+                "이익성장률": st.column_config.NumberColumn("이익성장율", format="%.2f"),
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
 
 if __name__ == "__main__":
     main()
