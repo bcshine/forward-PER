@@ -316,21 +316,15 @@ def main():
         tickers = get_top_500_tickers()
     
     df, scrape_time = scrape_all_data(tickers)
+    # 상단 요약 (최소한의 공간 차지)
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.markdown(f"**데이터 수집 일시:** {scrape_time}")
+        st.caption(f"🕒 최근 업데이트: {scrape_time}")
     with col2:
         if st.button("🔄 새로고침", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
-        
-    with st.expander("ℹ️ Delta PER (ΔPER) 설명 보기"):
-        st.info(
-            "### **Delta PER (ΔPER) 이란?**\n"
-            "- **현재 PER**에서 **12개월 선행(Forward) PER**를 뺀 값입니다.\n"
-            "- 이 숫자가 **클수록** 미래 실적 대비 현재 주가가 저평가되어 있거나, 이익 성장세가 가파르다는 것을 의미하여 **투자 가치가 높다**고 판단할 수 있습니다."
-        )
-    
+
     # Sidebar Filters
     st.sidebar.header("Search & Filter")
     
@@ -369,11 +363,11 @@ def main():
         )
         filtered_df = filtered_df[cond]
 
-    # 데이터 처리 결과 요약 표시
-    st.markdown("### **데이터 처리 결과**")
-    st.markdown(f"**분석 대상:** {len(tickers)}개 종목 중 **{len(filtered_df)}개 유효** (결측치 및 필터 적용 완료)")
-    st.markdown("---")
-    
+    # 데이터 처리 결과 요약 표시는 사이드바로 이동하여 공간 절약
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📊 데이터 요약")
+    st.sidebar.info(f"전체 {len(tickers)}개 중 **{len(filtered_df)}개 유효**\n\n(결측치 제외 및 필터 적용)")
+
     # 3) 검색어 필터 (검색어가 있을 때만)
     if search_query:
         search_cond = (
@@ -386,10 +380,8 @@ def main():
     if 'DeltaPER' in filtered_df.columns:
         filtered_df = filtered_df.sort_values(by='DeltaPER', ascending=False)
         
-    st.subheader(f"Filtered Results: {len(filtered_df)} stocks")
-    
-    # Apply explicit sorting buttons
-    st.markdown("**(Tip: 아래 표의 컬럼 제목을 클릭하시면 오름차순/내림차순 정렬이 동작합니다.)**")
+    st.markdown(f"**✅ 검색 결과: {len(filtered_df)}개 종목**")
+
     
     # Fill the '번호' column properly after filtering
     filtered_df = filtered_df.reset_index(drop=True)
@@ -401,16 +393,9 @@ def main():
     # Keep other columns slightly to the side if needed, but display only these primarily.
     
     csv_data = filtered_df[cols_order].to_csv(index=False).encode('utf-8-sig')
-    st.download_button(
-        label="📥 엑셀(CSV) 다운로드",
-        data=csv_data,
-        file_name=f"forward_per_data.csv",
-        mime="text/csv",
-    )
     
     # Display the dataframe with Streamlit
     if mobile_view:
-        st.info("📱 모바일 뷰가 활성화되었습니다. (핵심 지표 3개만 표시됩니다)")
         mobile_cols = ['종목명', 'DeltaPER', '현재 PER', '추정 PER']
         
         st.dataframe(
@@ -443,6 +428,25 @@ def main():
             use_container_width=True,
             hide_index=True,
         )
+
+    # 표 아래로 부가 정보 및 설명문 모두 이동
+    st.markdown("---")
+    col3, col4 = st.columns([1, 1])
+    with col3:
+        st.download_button(
+            label="📥 엑셀(CSV) 다운로드",
+            data=csv_data,
+            file_name=f"forward_per_data.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    with col4:
+        with st.expander("ℹ️ Delta PER 이란?"):
+            st.info(
+                "- **현재 PER**에서 **12개월 선행 PER**를 뺀 값\n"
+                "- **클수록** 미래 실적 대비 주가가 저평가되어 투자 가치가 높음"
+            )
+    st.caption("💡 Tip: 표의 컬럼 제목을 클릭하시면 오름차순/내림차순 정렬이 동작합니다.")
 
 if __name__ == "__main__":
     main()
