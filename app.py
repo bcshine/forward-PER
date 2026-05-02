@@ -321,7 +321,7 @@ def main():
     with col1:
         st.caption(f"🕒 최근 업데이트: {scrape_time}")
     with col2:
-        if st.button("🔄 새로고침", use_container_width=True):
+        if st.button("🔄 새로 크롤링", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
