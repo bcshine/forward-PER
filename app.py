@@ -288,9 +288,8 @@ def main():
         st.rerun()
         
     st.info(
-        "**💡 Delta PER란?**\n\n"
-        "**현재 PER에서 12개월 선행(Forward) 추정 PER을 뺀 값**(`현재 PER - 추정 PER`)입니다.\n\n"
-        "이 값이 **클수록** 향후 이익 성장이 기대되어, 현재 주가 대비 미래 밸류에이션 매력도가 높아질(저평가될) 종목을 의미합니다."
+        "### **Delta PER (ΔPER)**\n"
+        "- 현재 PER - 12개월 선행(Forward) PER  / **숫자 클수록 투자 가치 높음**"
     )
     
     # Sidebar Filters
@@ -310,21 +309,12 @@ def main():
     st.sidebar.subheader("📱 디스플레이 설정")
     mobile_view = st.sidebar.checkbox("모바일 뷰 (핵심 지표만)", value=False, help="모바일 기기에서 표가 깨질 때 사용하세요.")
     
-    st.caption(
-        f"요약: 요청 종목 {len(tickers)}개 → 수집 결과 {len(df)}행"
-    )
-
     # 1) 결측치 처리: 기본은 엄격 모드(필수 지표가 없으면 제외)
     if show_all_500:
         filtered_df = df.copy()
     else:
         filtered_df = df.dropna(subset=['추정 PER', '추정 ROE', '부채비율', '시가총액(억)'])
 
-    st.caption(
-        f"결측치 제거 후 {len(filtered_df)}행"
-        + (" (결측치 포함 모드)" if show_all_500 else "")
-    )
-    
     # 2) 필터 조건 (필터 적용 체크 시에만)
     if apply_filters:
         # 결측치 포함 모드에서는 비교 연산이 NaN을 False로 처리하게 두되,
@@ -339,7 +329,11 @@ def main():
             (filtered_df['시가총액(억)'] >= min_mcap)
         )
         filtered_df = filtered_df[cond]
-        st.caption(f"필터 적용 후 {len(filtered_df)}행")
+
+    # 데이터 처리 결과 요약 표시
+    st.markdown("### **데이터 처리 결과**")
+    st.markdown(f"**분석 대상:** {len(tickers)}개 종목 중 **{len(filtered_df)}개 유효** (결측치 및 필터 적용 완료)")
+    st.markdown("---")
     
     # 3) 검색어 필터 (검색어가 있을 때만)
     if search_query:
