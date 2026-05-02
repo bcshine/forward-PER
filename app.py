@@ -275,6 +275,53 @@ def scrape_all_data(tickers):
     return pd.DataFrame(results), scrape_time
 
 def main():
+    # --- Custom CSS for Mobile Optimization ---
+    st.markdown("""
+        <style>
+        /* 기본 폰트 최적화 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        
+        html, body, [class*="css"]  {
+            font-family: 'Noto+Sans+KR', sans-serif;
+        }
+
+        /* 모바일 전용 스타일 (768px 이하) */
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding-top: 2rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            h2 {
+                font-size: 1.5rem !important;
+            }
+            h3 {
+                font-size: 1.2rem !important;
+                margin-top: 1rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            .stMarkdown p, .stMarkdown li {
+                font-size: 0.95rem !important;
+                line-height: 1.5 !important;
+            }
+            .stButton>button {
+                width: 100% !important;
+            }
+            /* Info box text size */
+            div[data-testid="stNotification"] {
+                padding: 0.7rem !important;
+            }
+            div[data-testid="stNotification"] h3 {
+                font-size: 1.1rem !important;
+            }
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.title("📈 Delta PER Table")
     
     with st.spinner("Fetching Top 500 Tickers..."):
