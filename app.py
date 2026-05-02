@@ -340,7 +340,7 @@ def main():
     
     st.sidebar.markdown("---")
     st.sidebar.subheader("📱 디스플레이 설정")
-    mobile_view = st.sidebar.checkbox("모바일 뷰 (핵심 지표만)", value=False, help="모바일 기기에서 표가 깨질 때 사용하세요.")
+    mobile_view = st.sidebar.checkbox("모바일 뷰 (핵심 지표만)", value=True, help="모바일 기기에서 표가 깨질 때 사용하세요. 체크 해제 시 전체 데이터가 보입니다.")
     
     # 1) 결측치 처리: 기본은 엄격 모드(필수 지표가 없으면 제외)
     if show_all_500:
