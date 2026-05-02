@@ -316,16 +316,20 @@ def main():
         tickers = get_top_500_tickers()
     
     df, scrape_time = scrape_all_data(tickers)
-    st.markdown(f"**데이터 수집 일시:** {scrape_time}")
-    
-    if st.button("🔄 새로 크롤링하기"):
-        st.cache_data.clear()
-        st.rerun()
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f"**데이터 수집 일시:** {scrape_time}")
+    with col2:
+        if st.button("🔄 새로고침", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
         
-    st.info(
-        "### **Delta PER (ΔPER)**\n"
-        "- 현재 PER - 12개월 선행(Forward) PER  / **숫자 클수록 투자 가치 높음**"
-    )
+    with st.expander("ℹ️ Delta PER (ΔPER) 설명 보기"):
+        st.info(
+            "### **Delta PER (ΔPER) 이란?**\n"
+            "- **현재 PER**에서 **12개월 선행(Forward) PER**를 뺀 값입니다.\n"
+            "- 이 숫자가 **클수록** 미래 실적 대비 현재 주가가 저평가되어 있거나, 이익 성장세가 가파르다는 것을 의미하여 **투자 가치가 높다**고 판단할 수 있습니다."
+        )
     
     # Sidebar Filters
     st.sidebar.header("Search & Filter")
