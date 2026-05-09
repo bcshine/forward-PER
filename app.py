@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
 
 # --- Configuration & Constants ---
 st.set_page_config(layout="wide", page_title="Naver Finance Screener")
@@ -165,10 +166,35 @@ def main():
 
     st.title("📈 Delta PER Table")
     
-    with st.spinner("Fetching Tickers..."):
-        tickers = get_top_500_tickers()
-    
-    df, scrape_time = scrape_all_data(tickers)
+    if 'force_refresh' not in st.session_state:
+        st.session_state.force_refresh = False
+
+    df, scrape_time = None, None
+
+    if not st.session_state.force_refresh:
+        # 파일 캐시에서 데이터 불러오기 시도
+        if os.path.exists("delta_per_cache.csv") and os.path.exists("delta_per_cache_time.txt"):
+            try:
+                df = pd.read_csv("delta_per_cache.csv", dtype={'종목코드': str})
+                with open("delta_per_cache_time.txt", "r") as f:
+                    scrape_time = f.read().strip()
+            except Exception:
+                df = None
+
+    if df is None or st.session_state.force_refresh:
+        with st.spinner("새로운 데이터를 크롤링하는 중입니다... (약 10~30초 소요)"):
+            tickers = get_top_500_tickers()
+            df, scrape_time = scrape_all_data(tickers)
+            
+            # 크롤링 후 파일 캐시 저장
+            try:
+                df.to_csv("delta_per_cache.csv", index=False, encoding='utf-8-sig')
+                with open("delta_per_cache_time.txt", "w") as f:
+                    f.write(scrape_time)
+            except Exception:
+                pass
+                
+        st.session_state.force_refresh = False
     
     # Header UI
     col1, col2 = st.columns([2, 1])
@@ -176,6 +202,7 @@ def main():
     with col2:
         if st.button("🔄 새로 크롤링", use_container_width=True):
             st.cache_data.clear()
+            st.session_state.force_refresh = True
             st.rerun()
 
     # Sidebar & Filtering
@@ -217,7 +244,7 @@ def main():
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 📊 데이터 요약")
-    st.sidebar.info(f"전체 {len(tickers)}개 중 **{len(filtered_df)}개 유효**")
+    st.sidebar.info(f"전체 {len(df)}개 중 **{len(filtered_df)}개 유효**")
 
     st.markdown(f"**✅ 검색 결과: {len(filtered_df)}개 종목**")
 

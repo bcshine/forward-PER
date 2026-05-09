@@ -6,3 +6,5 @@ venv/
 .env
 .streamlit/
 .DS_Store
+delta_per_cache.csv
+delta_per_cache_time.txt
