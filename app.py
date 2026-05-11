@@ -44,7 +44,7 @@ def fetch_ticker_page(sosok, page):
         pass
     return tickers
 
-@st.cache_data(ttl=3600*12, show_spinner="데이터 크롤링중...")
+@st.cache_data(ttl=3600*12, show_spinner=False)
 def get_top_500_tickers():
     """Retrieve top 500 stocks using parallel requests for faster initial load."""
     all_tickers = []
@@ -133,7 +133,7 @@ def get_financial_data(ticker_info):
     except Exception:
         return data
 
-@st.cache_data(ttl=3600*12, show_spinner="데이터 크롤링중...")
+@st.cache_data(ttl=3600*12, show_spinner=False)
 def scrape_all_data(tickers):
     results = []
     my_bar = st.progress(0, text="데이터 크롤링중... 잠시만 기다려주세요.")
@@ -182,12 +182,12 @@ def main():
                 df = None
 
     if df is None or st.session_state.force_refresh:
-        with st.status("데이터 크롤링중...", expanded=True) as status:
-            st.write("상위 500개 종목 리스트를 가져오는 중...")
+        status_area = st.empty()
+        with status_area.container():
+            st.info("📊 데이터 크롤링중... 잠시만 기다려주세요.")
             tickers = get_top_500_tickers()
-            st.write("각 종목의 상세 재무 정보를 수집하는 중...")
             df, scrape_time = scrape_all_data(tickers)
-            status.update(label="크롤링 완료!", state="complete", expanded=False)
+        status_area.empty()
             
             # 크롤링 후 파일 캐시 저장
             try:
