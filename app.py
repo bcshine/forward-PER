@@ -51,13 +51,16 @@ def fetch_ticker_page(sosok: int, page: int) -> List[Dict[str, Any]]:
 def get_top_500_tickers() -> List[Dict[str, Any]]:
     """Retrieve top 500 stocks using parallel requests."""
     all_tickers = []
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        tasks = [executor.submit(fetch_ticker_page, sosok, page) for sosok in [0, 1] for page in range(1, 6)]
-        for future in as_completed(tasks):
-            all_tickers.extend(future.result())
+    try:
+        with ThreadPoolExecutor(max_workers=5) as executor: # Reduced workers to prevent rate limiting
+            tasks = [executor.submit(fetch_ticker_page, sosok, page) for sosok in [0, 1] for page in range(1, 6)]
+            for future in as_completed(tasks):
+                all_tickers.extend(future.result())
+    except Exception as e:
+        print(f"Error fetching tickers: {e}")
             
     # Sort by Market Cap and take Top 500
-    all_tickers = sorted([t for t in all_tickers if t['Mcap'] is not None], key=lambda x: x['Mcap'], reverse=True)
+    all_tickers = sorted([t for t in all_tickers if t.get('Mcap') is not None], key=lambda x: x['Mcap'], reverse=True)
     return all_tickers[:500]
 
 def get_financial_data(ticker_info: Dict[str, str]) -> Dict[str, Any]:
@@ -140,7 +143,7 @@ def scrape_all_data(tickers: List[Dict[str, Any]]) -> Tuple[pd.DataFrame, str]:
     total = len(tickers)
     my_bar = st.progress(0, text="데이터 크롤링 중... 잠시만 기다려주세요.")
     
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor: # Reduced workers
         futures = {executor.submit(get_financial_data, t): i for i, t in enumerate(tickers)}
         for i, future in enumerate(as_completed(futures)):
             results.append(future.result())
@@ -182,19 +185,29 @@ def load_data(force_refresh: bool) -> Tuple[pd.DataFrame, str]:
     if df is None or force_refresh:
         status_area = st.empty()
         with status_area.container():
-            st.info("📊 데이터 크롤링중... 잠시만 기다려주세요.")
-            tickers = get_top_500_tickers()
-            df, scrape_time = scrape_all_data(tickers)
+            try:
+                st.info("📊 데이터 크롤링중... (1/2) 종목 리스트 수집 중")
+                tickers = get_top_500_tickers()
+                if not tickers:
+                    st.error("🚨 종목 리스트를 가져오지 못했습니다. 네이버 금융 서버에서 접속을 차단했을 수 있습니다.")
+                    return pd.DataFrame(), datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                st.info("📊 데이터 크롤링중... (2/2) 상세 재무 정보 수집 중")
+                df, scrape_time = scrape_all_data(tickers)
+            except Exception as e:
+                st.error(f"🚨 크롤링 중 오류가 발생했습니다: {str(e)}")
+                return pd.DataFrame(), datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         status_area.empty()
             
-        try:
-            df.to_csv(CACHE_FILE, index=False, encoding='utf-8-sig')
-            with open(CACHE_TIME_FILE, "w") as f:
-                f.write(scrape_time)
-        except Exception:
-            pass
+        if df is not None and not df.empty:
+            try:
+                df.to_csv(CACHE_FILE, index=False, encoding='utf-8-sig')
+                with open(CACHE_TIME_FILE, "w") as f:
+                    f.write(scrape_time)
+            except Exception:
+                pass
             
-    return df, scrape_time
+    return df if df is not None else pd.DataFrame(), scrape_time or ""
 
 def render_sidebar(df: pd.DataFrame) -> Dict[str, Any]:
     """Render sidebar filters and return user selections."""
@@ -236,7 +249,16 @@ def render_sidebar(df: pd.DataFrame) -> Dict[str, Any]:
 
 def process_data(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
     """Filter and sort the dataframe based on user configuration."""
-    f_df = df.copy() if config['show_all'] else df.dropna(subset=['추정 PER', '추정 ROE', '부채비율', '시가총액(억)'])
+    if df.empty:
+        return df
+
+    # Check if necessary columns exist
+    required_cols = ['추정 PER', '추정 ROE', '부채비율', '시가총액(억)']
+    missing_cols = [c for c in required_cols if c not in df.columns]
+    if missing_cols:
+        return df
+
+    f_df = df.copy() if config['show_all'] else df.dropna(subset=required_cols)
     
     if config['cats']:
         f_df = f_df[f_df['산업카테고리'].isin(config['cats'])]
