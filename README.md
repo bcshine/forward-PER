@@ -1,14 +1,3 @@
----
-title: Delta-PER
-emoji: 📈
-colorFrom: blue
-colorTo: indigo
-sdk: streamlit
-sdk_version: 1.52.1
-app_file: app.py
-pinned: false
----
-
 # 📈 Delta PER Table
 
 현재 PER에서 12개월 선행(Forward) 추정 PER을 뺀 값(Delta PER)을 분석하여 투자 가치가 높은 종목을 발굴하는 도구입니다.
