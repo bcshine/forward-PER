@@ -136,7 +136,7 @@ def get_financial_data(ticker_info):
 @st.cache_data(ttl=3600*12)
 def scrape_all_data(tickers):
     results = []
-    my_bar = st.progress(0, text="Scraping Stocks. Please wait...")
+    my_bar = st.progress(0, text="데이터 크롤링중... 잠시만 기다려주세요.")
     total = len(tickers)
     
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -144,7 +144,7 @@ def scrape_all_data(tickers):
         for i, future in enumerate(as_completed(futures)):
             results.append(future.result())
             if (i + 1) % 10 == 0 or (i + 1) == total:
-                my_bar.progress((i + 1) / total, text=f"Scraping... {i+1}/{total}")
+                my_bar.progress((i + 1) / total, text=f"데이터 크롤링 중... {i+1}/{total}")
                 
     my_bar.empty()
     return pd.DataFrame(results), datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -206,11 +206,16 @@ def main():
             st.rerun()
 
     # Sidebar & Filtering
-    st.sidebar.header("Search & Filter")
-    search_query = st.sidebar.text_input("🔍 종목명/코드 검색", "")
+    st.sidebar.header("🔍 검색 및 필터")
+    search_query = st.sidebar.text_input("종목명/코드 검색", "")
     
     st.sidebar.markdown("---")
-    apply_filters = st.sidebar.checkbox("필터 적용", value=True)
+    apply_filters = st.sidebar.checkbox("필터 적용 (AND 조건)", value=True)
+    
+    # Category Filter
+    all_categories = sorted(df['산업카테고리'].dropna().unique().tolist()) if df is not None else []
+    selected_categories = st.sidebar.multiselect("📂 산업카테고리 선택", all_categories, default=[])
+
     show_all = st.sidebar.checkbox("결측치 포함(500개 보기)", value=False)
     
     f_per = st.sidebar.number_input("Max 추정 PER", value=9999.0, disabled=not apply_filters)
@@ -219,12 +224,25 @@ def main():
     f_mcap = st.sidebar.number_input("Min 시가총액 (억원)", value=0, step=500, disabled=not apply_filters)
     
     st.sidebar.markdown("---")
+    st.sidebar.subheader("🔃 정렬 설정")
+    cols_order = ['번호', '종목코드', '종목명', '산업카테고리', '시가총액(억)', 'DeltaPER', '현재 PER', '추정 PER', '추정 ROE', '부채비율', '이익성장률']
+    
+    sort_col1 = st.sidebar.selectbox("1순위 정렬", cols_order, index=5) # Default DeltaPER
+    sort_asc1 = st.sidebar.radio("1순위 방향", ["내림차순", "오름차순"], horizontal=True, key="sort1") == "오름차순"
+    
+    sort_col2 = st.sidebar.selectbox("2순위 정렬 (AND 조건)", ["없음"] + cols_order, index=0)
+    sort_asc2 = st.sidebar.radio("2순위 방향", ["내림차순", "오름차순"], horizontal=True, key="sort2") == "오름차순"
+
+    st.sidebar.markdown("---")
     st.sidebar.subheader("📱 디스플레이 설정")
     mobile_view = st.sidebar.checkbox("모바일 뷰 (핵심 지표만)", value=True, key="mobile_view_v3")
 
     # Data Processing
     filtered_df = df.copy() if show_all else df.dropna(subset=['추정 PER', '추정 ROE', '부채비율', '시가총액(억)'])
     
+    if selected_categories:
+        filtered_df = filtered_df[filtered_df['산업카테고리'].isin(selected_categories)]
+
     if apply_filters:
         for c in ['추정 PER', '추정 ROE', '부채비율', '시가총액(억)']:
             filtered_df[c] = pd.to_numeric(filtered_df[c], errors='coerce')
@@ -234,10 +252,16 @@ def main():
 
     if search_query:
         filtered_df = filtered_df[filtered_df['종목명'].str.contains(search_query, case=False, na=False) | 
-                                  filtered_df['종목코드'].str.contains(search_query, case=False, na=False)]
+                                   filtered_df['종목코드'].str.contains(search_query, case=False, na=False)]
 
-    if 'DeltaPER' in filtered_df.columns:
-        filtered_df = filtered_df.sort_values(by='DeltaPER', ascending=False)
+    # Sorting logic
+    sort_cols = [sort_col1]
+    sort_ascending = [sort_asc1]
+    if sort_col2 != "없음":
+        sort_cols.append(sort_col2)
+        sort_ascending.append(sort_asc2)
+    
+    filtered_df = filtered_df.sort_values(by=sort_cols, ascending=sort_ascending)
     
     filtered_df = filtered_df.reset_index(drop=True)
     filtered_df['번호'] = filtered_df.index + 1
