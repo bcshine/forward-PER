@@ -265,8 +265,7 @@ def process_data(df: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFrame:
 
     if config['apply']:
         numeric_cols = ['추정 PER', '추정 ROE', '부채비율', '시가총액(억)']
-        for c in numeric_cols:
-            f_df[c] = pd.to_numeric(f_df[c], errors='coerce')
+        f_df[numeric_cols] = f_df[numeric_cols].apply(pd.to_numeric, errors='coerce')
         cond = (f_df['추정 PER'] <= config['per']) & (f_df['추정 ROE'] >= config['roe']) & \
                (f_df['부채비율'] <= config['debt']) & (f_df['시가총액(억)'] >= config['mcap'])
         f_df = f_df[cond]
@@ -326,9 +325,9 @@ def main():
         st.dataframe(filtered_df[['종목명', 'DeltaPER', '현재 PER', '추정 PER']], 
                      column_config={"종목명": st.column_config.TextColumn(width=100),
                                     "DeltaPER": st.column_config.NumberColumn("Delta", format="%.2f", width=60)},
-                     use_container_width=True, hide_index=True)
+                     hide_index=True)
     else:
-        st.dataframe(filtered_df[cols_order], use_container_width=True, hide_index=True)
+        st.dataframe(filtered_df[cols_order], hide_index=True)
 
     # Footer Actions
     st.markdown("---")
