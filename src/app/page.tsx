@@ -262,42 +262,42 @@ export default function Home() {
       <main className="flex-1 flex flex-col h-full overflow-hidden w-full">
         
         {/* Top bar */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
-          <div className="flex items-center gap-2 md:gap-3">
-            <button className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" onClick={() => setIsSidebarOpen(true)}>
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md flex items-center justify-between px-2.5 md:px-8 z-10 shrink-0">
+          <div className="flex items-center gap-1.5 md:gap-3">
+            <button className="md:hidden p-2 -ml-1.5 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" onClick={() => setIsSidebarOpen(true)}>
               <Menu className="w-6 h-6" />
             </button>
-            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full text-xs md:text-sm font-medium flex items-center gap-1.5 shrink-0">
+            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-xs md:text-sm font-medium flex items-center gap-1 shrink-0">
               유효 종목 
-              <span className="bg-blue-600 text-white px-2 py-0.5 rounded-full text-xs">{filteredData.length}</span>
+              <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded-full text-[10px] md:text-xs">{filteredData.length}</span>
             </div>
             
             <button 
               onClick={() => setIsPcMode(!isPcMode)}
-              className="md:hidden flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors shadow-sm shrink-0"
+              className="md:hidden flex items-center gap-0.5 text-[11px] font-semibold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors shadow-sm shrink-0"
             >
               {isPcMode ? '모바일 최적화' : 'PC 화면용'}
             </button>
           </div>
 
-          <button onClick={handleDownload} className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 md:px-4 md:py-2 rounded-lg shadow-sm whitespace-nowrap">
-            <Download className="w-4 h-4" /> <span className="hidden sm:inline">엑셀 다운로드</span>
+          <button onClick={handleDownload} className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg shadow-sm whitespace-nowrap">
+            <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">엑셀 다운로드</span>
           </button>
         </header>
 
         {/* Info Banner */}
-        <div className="px-4 md:px-8 py-4 shrink-0">
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-100 dark:border-indigo-900/50 p-4 rounded-xl flex items-start gap-3">
-            <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-            <div className="text-sm text-indigo-900 dark:text-indigo-200">
-              <strong className="font-semibold block mb-1">Delta PER 이란?</strong>
+        <div className="px-2.5 md:px-8 py-3 shrink-0">
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-100 dark:border-indigo-900/50 p-3.5 rounded-xl flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+            <div className="text-xs md:text-sm text-indigo-900 dark:text-indigo-200">
+              <strong className="font-semibold block mb-0.5">Delta PER 이란?</strong>
               현재 PER - 선행(추정) PER. 값이 클수록 투자 가치가 높음.
             </div>
           </div>
         </div>
 
         {/* Table Area */}
-        <div className="flex-1 px-4 md:px-8 pb-4 md:pb-8 flex flex-col min-h-0">
+        <div className="flex-1 px-2.5 md:px-8 pb-3 md:pb-8 flex flex-col min-h-0">
           <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col flex-1 overflow-hidden relative">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-4 min-h-[300px]">
@@ -314,31 +314,31 @@ export default function Home() {
                 <table className="w-full text-sm text-left relative">
                   <thead className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 sticky top-0 z-20 shadow-sm border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className={`px-4 py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('번호')}>
+                      <th className={`px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('번호')}>
                         <div className="flex items-center">No {renderSortIcon('번호')}</div>
                       </th>
-                      <th className="px-4 py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('종목명')}>
+                      <th className="px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('종목명')}>
                         <div className="flex items-center">종목명 {renderSortIcon('종목명')}</div>
                       </th>
-                      <th className={`px-4 py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('산업카테고리')}>
+                      <th className={`px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('산업카테고리')}>
                         <div className="flex items-center">산업군 {renderSortIcon('산업카테고리')}</div>
                       </th>
-                      <th className="px-4 py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('DeltaPER')}>
-                        <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold">Delta PER {renderSortIcon('DeltaPER')}</div>
+                      <th className="px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('DeltaPER')}>
+                        <div className="flex items-center text-blue-600 dark:text-blue-400 font-bold">Delta {renderSortIcon('DeltaPER')}</div>
                       </th>
-                      <th className="px-4 py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('현재 PER')}>
-                        <div className="flex items-center">현재 PER {renderSortIcon('현재 PER')}</div>
+                      <th className="px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('현재 PER')}>
+                        <div className="flex items-center">현재 {renderSortIcon('현재 PER')}</div>
                       </th>
-                      <th className="px-4 py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('선행 PER')}>
-                        <div className="flex items-center">선행 PER {renderSortIcon('선행 PER')}</div>
+                      <th className="px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap" onClick={() => handleSort('선행 PER')}>
+                        <div className="flex items-center">선행 {renderSortIcon('선행 PER')}</div>
                       </th>
-                      <th className={`px-4 py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('추정 ROE')}>
+                      <th className={`px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('추정 ROE')}>
                         <div className="flex items-center">추정 ROE {renderSortIcon('추정 ROE')}</div>
                       </th>
-                      <th className={`px-4 py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('부채비율')}>
+                      <th className={`px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('부채비율')}>
                         <div className="flex items-center">부채비율 {renderSortIcon('부채비율')}</div>
                       </th>
-                      <th className={`px-4 py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('시가총액(억)')}>
+                      <th className={`px-2 md:px-4 py-2.5 md:py-3 font-medium cursor-pointer group whitespace-nowrap ${isPcMode ? '' : 'hidden md:table-cell'}`} onClick={() => handleSort('시가총액(억)')}>
                         <div className="flex items-center">시총(억) {renderSortIcon('시가총액(억)')}</div>
                       </th>
                     </tr>
@@ -346,24 +346,24 @@ export default function Home() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     {filteredData.map((row, idx) => (
                       <tr key={`${row.종목코드}-${idx}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
-                        <td className={`px-4 py-3 text-slate-500 ${isPcMode ? '' : 'hidden md:table-cell'}`}>{idx + 1}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-slate-900 dark:text-slate-100">{row.종목명}</span>
-                            <span className="text-xs text-slate-400">{row.종목코드}</span>
+                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-slate-500 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{idx + 1}</td>
+                        <td className="px-2 md:px-4 py-2.5 md:py-3 max-w-[100px] md:max-w-none min-w-0">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis">{row.종목명}</span>
+                            <span className="text-[10px] text-slate-400">{row.종목코드}</span>
                           </div>
                         </td>
-                        <td className={`px-4 py-3 text-slate-600 dark:text-slate-400 ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row.산업카테고리 || '-'}</td>
-                        <td className="px-4 py-3 font-bold">
+                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row.산업카테고리 || '-'}</td>
+                        <td className="px-2 md:px-4 py-2.5 md:py-3 font-bold text-xs md:text-sm">
                           <span className={row.DeltaPER && row.DeltaPER > 0 ? 'text-blue-600 dark:text-blue-400' : row.DeltaPER && row.DeltaPER < 0 ? 'text-red-500 dark:text-red-400' : ''}>
                             {row.DeltaPER ?? '-'}
                           </span>
                         </td>
-                        <td className="px-4 py-3">{row['현재 PER'] ?? '-'}</td>
-                        <td className="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-medium">{row['선행 PER'] ?? '-'}</td>
-                        <td className={`px-4 py-3 ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['추정 ROE'] ?? '-'}</td>
-                        <td className={`px-4 py-3 ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['부채비율'] ?? '-'}</td>
-                        <td className={`px-4 py-3 ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['시가총액(억)']?.toLocaleString() ?? '-'}</td>
+                        <td className="px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm">{row['현재 PER'] ?? '-'}</td>
+                        <td className="px-2 md:px-4 py-2.5 md:py-3 text-indigo-600 dark:text-indigo-400 font-medium text-xs md:text-sm">{row['선행 PER'] ?? '-'}</td>
+                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['추정 ROE'] ?? '-'}</td>
+                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['부채비율'] ?? '-'}</td>
+                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['시가총액(억)']?.toLocaleString() ?? '-'}</td>
                       </tr>
                     ))}
                     {filteredData.length === 0 && !loading && (
