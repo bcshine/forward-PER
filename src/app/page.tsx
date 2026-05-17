@@ -23,6 +23,15 @@ export default function Home() {
   const [maxDebt, setMaxDebt] = useState<number>(9999);
   const [minMcap, setMinMcap] = useState<number>(0);
   const [showMissing, setShowMissing] = useState(false);
+  const [showPriorityOnly, setShowPriorityOnly] = useState(false);
+
+  // Priority Stocks Count (선행 PER < 10 & 현재 PER >= 30)
+  const priorityCount = useMemo(() => {
+    return data.filter(d => 
+      d['선행 PER'] !== null && d['선행 PER'] < 10 &&
+      d['현재 PER'] !== null && d['현재 PER'] >= 30
+    ).length;
+  }, [data]);
 
   // Sorting
   type SortConfig = { key: keyof FinancialData | 'none'; asc: boolean };
@@ -92,6 +101,14 @@ export default function Home() {
       });
     }
 
+    // 3.5. Priority stocks filter (선행 PER < 10 & 현재 PER >= 30)
+    if (showPriorityOnly) {
+      result = result.filter(d => 
+        d['선행 PER'] !== null && d['선행 PER'] < 10 &&
+        d['현재 PER'] !== null && d['현재 PER'] >= 30
+      );
+    }
+
     // 4. Search
     if (search.trim() !== '') {
       const q = search.toLowerCase();
@@ -124,7 +141,7 @@ export default function Home() {
     });
 
     return result;
-  }, [data, showMissing, selectedCategories, applyFilters, maxPer, minRoe, maxDebt, minMcap, search, primarySort, secondarySort]);
+  }, [data, showMissing, selectedCategories, applyFilters, maxPer, minRoe, maxDebt, minMcap, search, primarySort, secondarySort, showPriorityOnly]);
 
   const handleDownload = () => {
     const headers = ['번호', '종목코드', '종목명', '산업카테고리', '시가총액(억)', 'DeltaPER', '현재 PER', '선행 PER', '추정 ROE', '부채비율', '이익성장률'];
@@ -199,7 +216,26 @@ export default function Home() {
 
           {/* Settings */}
           <div className="space-y-4">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+            <button
+              onClick={() => setShowPriorityOnly(!showPriorityOnly)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm font-semibold transition-all ${
+                showPriorityOnly 
+                  ? 'bg-amber-500 border-amber-600 text-white shadow-sm shadow-amber-500/20' 
+                  : 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 dark:hover:bg-amber-950/20'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-base">★</span> 우선고려종목만 보기
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${showPriorityOnly ? 'bg-white text-amber-600' : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'}`}>
+                {priorityCount}개
+              </span>
+            </button>
+            <p className="text-[11px] text-amber-600 dark:text-amber-400/80 -mt-2 px-1 leading-normal">
+              ※ 선행 PER 10 미만 & 현재 PER 30 이상
+            </p>
+
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium pt-2">
               <input type="checkbox" checked={applyFilters} onChange={(e) => setApplyFilters(e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500 bg-slate-100 border-slate-300"/>
               필터 적용 (AND 조건)
             </label>
@@ -271,6 +307,20 @@ export default function Home() {
               유효 종목 
               <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded-full text-[10px] md:text-xs">{filteredData.length}</span>
             </div>
+
+            <button
+              onClick={() => setShowPriorityOnly(!showPriorityOnly)}
+              className={`flex items-center gap-1 px-2.5 py-1 md:px-3.5 md:py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all border ${
+                showPriorityOnly 
+                  ? 'bg-amber-500 border-amber-600 text-white shadow-sm shadow-amber-500/20 ring-2 ring-amber-300 dark:ring-amber-800' 
+                  : 'bg-amber-50/50 hover:bg-amber-100/50 dark:bg-amber-950/15 dark:hover:bg-amber-950/30 border-amber-200 dark:border-amber-900/30 text-amber-700 dark:text-amber-400'
+              }`}
+            >
+              <span className="text-amber-500">★</span> 우선고려
+              <span className={`ml-0.5 px-1.5 py-0.1 rounded-full text-[10px] md:text-xs font-bold ${showPriorityOnly ? 'bg-white text-amber-600' : 'bg-amber-100/80 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'}`}>
+                {priorityCount}
+              </span>
+            </button>
             
             <button 
               onClick={() => setIsPcMode(!isPcMode)}
@@ -344,28 +394,46 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                    {filteredData.map((row, idx) => (
-                      <tr key={`${row.종목코드}-${idx}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
-                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-slate-500 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{idx + 1}</td>
-                        <td className="px-2 md:px-4 py-2.5 md:py-3 max-w-[100px] md:max-w-none min-w-0">
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis">{row.종목명}</span>
-                            <span className="text-[10px] text-slate-400">{row.종목코드}</span>
-                          </div>
-                        </td>
-                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row.산업카테고리 || '-'}</td>
-                        <td className="px-2 md:px-4 py-2.5 md:py-3 font-bold text-xs md:text-sm">
-                          <span className={row.DeltaPER && row.DeltaPER > 0 ? 'text-blue-600 dark:text-blue-400' : row.DeltaPER && row.DeltaPER < 0 ? 'text-red-500 dark:text-red-400' : ''}>
-                            {row.DeltaPER ?? '-'}
-                          </span>
-                        </td>
-                        <td className="px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm">{row['현재 PER'] ?? '-'}</td>
-                        <td className="px-2 md:px-4 py-2.5 md:py-3 text-indigo-600 dark:text-indigo-400 font-medium text-xs md:text-sm">{row['선행 PER'] ?? '-'}</td>
-                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['추정 ROE'] ?? '-'}</td>
-                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['부채비율'] ?? '-'}</td>
-                        <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['시가총액(억)']?.toLocaleString() ?? '-'}</td>
-                      </tr>
-                    ))}
+                    {filteredData.map((row, idx) => {
+                      const isPriority = row['선행 PER'] !== null && row['선행 PER'] < 10 && 
+                                         row['현재 PER'] !== null && row['현재 PER'] >= 30;
+                      return (
+                        <tr 
+                          key={`${row.종목코드}-${idx}`} 
+                          className={`transition-colors ${
+                            isPriority 
+                              ? 'bg-amber-500/5 dark:bg-amber-500/10 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 border-l-4 border-l-amber-500' 
+                              : 'hover:bg-slate-50/80 dark:hover:bg-slate-900/50 border-l-4 border-l-transparent'
+                          }`}
+                        >
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 text-slate-500 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{idx + 1}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 max-w-[150px] md:max-w-none min-w-0">
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-semibold text-slate-900 dark:text-slate-100 text-xs md:text-sm flex flex-wrap items-center gap-1">
+                                {row.종목명}
+                                {isPriority && (
+                                  <span className="inline-flex items-center px-1 py-0.2 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 whitespace-nowrap">
+                                    ★ 우선고려
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-[10px] text-slate-400">{row.종목코드}</span>
+                            </div>
+                          </td>
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row.산업카테고리 || '-'}</td>
+                          <td className="px-2 md:px-4 py-2.5 md:py-3 font-bold text-xs md:text-sm">
+                            <span className={row.DeltaPER && row.DeltaPER > 0 ? 'text-blue-600 dark:text-blue-400' : row.DeltaPER && row.DeltaPER < 0 ? 'text-red-500 dark:text-red-400' : ''}>
+                              {row.DeltaPER ?? '-'}
+                            </span>
+                          </td>
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-medium ${isPriority ? 'text-amber-600 dark:text-amber-400' : ''}`}>{row['현재 PER'] ?? '-'}</td>
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm ${isPriority ? 'text-amber-500' : 'text-indigo-600 dark:text-indigo-400'}`}>{row['선행 PER'] ?? '-'}</td>
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['추정 ROE'] ?? '-'}</td>
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['부채비율'] ?? '-'}</td>
+                          <td className={`px-2 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${isPcMode ? '' : 'hidden md:table-cell'}`}>{row['시가총액(억)']?.toLocaleString() ?? '-'}</td>
+                        </tr>
+                      );
+                    })}
                     {filteredData.length === 0 && !loading && (
                       <tr>
                         <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
