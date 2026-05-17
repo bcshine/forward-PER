@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import iconv from 'iconv-lite';
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
 export interface TickerInfo {
   Code: string;
@@ -30,7 +31,7 @@ const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
 };
 
-const CACHE_FILE = path.join(process.cwd(), 'delta_per_cache.json');
+const CACHE_FILE = path.join(os.tmpdir(), 'delta_per_cache.json');
 const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days (virtually infinite, only updates on manual refresh)
 
 // Helper to fetch euc-kr encoded HTML (used by sise_market_sum)

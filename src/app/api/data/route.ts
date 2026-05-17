@@ -10,7 +10,8 @@ export async function GET(request: Request) {
     if (forceRefresh) {
       const fs = await import('fs/promises');
       const path = await import('path');
-      const CACHE_FILE = path.join(process.cwd(), 'delta_per_cache.json');
+      const os = await import('os');
+      const CACHE_FILE = path.join(os.tmpdir(), 'delta_per_cache.json');
       try {
         await fs.unlink(CACHE_FILE);
       } catch (e) {
