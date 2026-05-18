@@ -25,11 +25,11 @@ export default function Home() {
   const [showMissing, setShowMissing] = useState(false);
   const [showPriorityOnly, setShowPriorityOnly] = useState(false);
 
-  // Priority Stocks Count (선행 PER < 10 & 현재 PER >= 30)
+  // Priority Stocks Count (선행 PER <= 10 & 현재 PER >= 25)
   const priorityCount = useMemo(() => {
     return data.filter(d => 
-      d['선행 PER'] !== null && d['선행 PER'] < 10 &&
-      d['현재 PER'] !== null && d['현재 PER'] >= 30
+      d['선행 PER'] !== null && d['선행 PER'] <= 10 &&
+      d['현재 PER'] !== null && d['현재 PER'] >= 25
     ).length;
   }, [data]);
 
@@ -101,11 +101,11 @@ export default function Home() {
       });
     }
 
-    // 3.5. Priority stocks filter (선행 PER < 10 & 현재 PER >= 30)
+    // 3.5. Priority stocks filter (선행 PER <= 10 & 현재 PER >= 25)
     if (showPriorityOnly) {
       result = result.filter(d => 
-        d['선행 PER'] !== null && d['선행 PER'] < 10 &&
-        d['현재 PER'] !== null && d['현재 PER'] >= 30
+        d['선행 PER'] !== null && d['선행 PER'] <= 10 &&
+        d['현재 PER'] !== null && d['현재 PER'] >= 25
       );
     }
 
@@ -232,7 +232,7 @@ export default function Home() {
               </span>
             </button>
             <p className="text-[11px] text-amber-600 dark:text-amber-400/80 -mt-2 px-1 leading-normal">
-              ※ 선행 PER 10 미만 & 현재 PER 30 이상
+              ※ 선행 PER 10 이하 & 현재 PER 25 이상
             </p>
 
             <label className="flex items-center gap-2 cursor-pointer text-sm font-medium pt-2">
@@ -395,8 +395,8 @@ export default function Home() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     {filteredData.map((row, idx) => {
-                      const isPriority = row['선행 PER'] !== null && row['선행 PER'] < 10 && 
-                                         row['현재 PER'] !== null && row['현재 PER'] >= 30;
+                      const isPriority = row['선행 PER'] !== null && row['선행 PER'] <= 10 && 
+                                         row['현재 PER'] !== null && row['현재 PER'] >= 25;
                       return (
                         <tr 
                           key={`${row.종목코드}-${idx}`} 
