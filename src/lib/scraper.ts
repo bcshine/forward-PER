@@ -31,8 +31,39 @@ const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
 };
 
-const CACHE_FILE = path.join(os.tmpdir(), 'delta_per_cache.json');
 const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days (virtually infinite, only updates on manual refresh)
+
+// Dynamic cache storage helpers for Vercel serverless environments
+async function readCacheFile(): Promise<string> {
+  const tmpPath = path.join('/tmp', 'delta_per_cache.json');
+  try {
+    // 1. Try to read from Serverless /tmp space (which might have manually refreshed data)
+    return await fs.readFile(tmpPath, 'utf-8');
+  } catch (e) {
+    // 2. Fallback to bundled cache file in project root
+    const rootPath = path.join(process.cwd(), 'delta_per_cache.json');
+    return await fs.readFile(rootPath, 'utf-8');
+  }
+}
+
+async function writeCacheFile(content: string): Promise<void> {
+  // 1. Try writing to project root first (standard local development)
+  const rootPath = path.join(process.cwd(), 'delta_per_cache.json');
+  try {
+    await fs.writeFile(rootPath, content, 'utf-8');
+    console.log('Successfully saved cache to project root.');
+  } catch (e) {
+    // 2. If it fails (e.g., Read-only filesystem on Vercel serverless), write to /tmp instead
+    const tmpPath = path.join('/tmp', 'delta_per_cache.json');
+    try {
+      await fs.writeFile(tmpPath, content, 'utf-8');
+      console.log('Saved cache to serverless /tmp due to read-only filesystem.');
+    } catch (err) {
+      console.error('Failed to write cache to both root and /tmp:', err);
+      throw err;
+    }
+  }
+}
 
 // Helper to fetch euc-kr encoded HTML (used by sise_market_sum)
 async function fetchEucKrHtml(url: string): Promise<string> {
@@ -187,16 +218,20 @@ export async function getFinancialData(ticker: TickerInfo): Promise<FinancialDat
   return data;
 }
 
-export async function scrapeAllData(): Promise<{ data: FinancialData[], scrapeTime: string }> {
-  try {
-    const stat = await fs.stat(CACHE_FILE);
-    if (Date.now() - stat.mtimeMs < CACHE_TTL) {
-      const cachedData = await fs.readFile(CACHE_FILE, 'utf-8');
+export async function scrapeAllData(force: boolean = false): Promise<{ data: FinancialData[], scrapeTime: string }> {
+  if (!force) {
+    try {
+      const cachedData = await readCacheFile();
       const parsed = JSON.parse(cachedData);
+      console.log('Serving from local cache (force=false).');
       return parsed;
+    } catch (e) {
+      console.log('Cache file not found, and force=false. Throwing cache-miss error.');
+      throw new Error('캐시된 데이터가 존재하지 않습니다. 먼저 "새로 크롤링"을 눌러 데이터를 수집해주세요.');
     }
-  } catch (e) {
   }
+
+  console.log('Starting fresh KOSPI/KOSDAQ top 500 scrape (force=true)...');
 
   const tickers = await getTop500Tickers();
   const results: FinancialData[] = [];
@@ -217,7 +252,7 @@ export async function scrapeAllData(): Promise<{ data: FinancialData[], scrapeTi
   const finalResult = { data: results, scrapeTime };
 
   try {
-    await fs.writeFile(CACHE_FILE, JSON.stringify(finalResult), 'utf-8');
+    await writeCacheFile(JSON.stringify(finalResult));
   } catch (e) {
     console.error("Failed to write cache", e);
   }

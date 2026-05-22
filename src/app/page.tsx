@@ -44,7 +44,10 @@ export default function Home() {
     setError(null);
     try {
       const res = await fetch(`/api/data${force ? '?force=true' : ''}`);
-      if (!res.ok) throw new Error('데이터를 불러오는데 실패했습니다.');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || '데이터를 불러오는데 실패했습니다.');
+      }
       const result = await res.json();
       if (result.data) {
         setData(result.data);
