@@ -1,0 +1,2 @@
+echo "=== [하네스UX 테스트] 실행 중... ==="
+npm run test:ux
