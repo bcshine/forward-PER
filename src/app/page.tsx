@@ -25,11 +25,11 @@ export default function Home() {
   const [showMissing, setShowMissing] = useState(false);
   const [showPriorityOnly, setShowPriorityOnly] = useState(false);
 
-  // Priority Stocks Count (선행 PER <= 10 & 현재 PER >= 25)
+  // Priority Stocks Count (선행 PER <= 10 & 현재 PER >= 20)
   const priorityCount = useMemo(() => {
     return data.filter(d => 
       d['선행 PER'] !== null && d['선행 PER'] <= 10 &&
-      d['현재 PER'] !== null && d['현재 PER'] >= 25
+      d['현재 PER'] !== null && d['현재 PER'] >= 20
     ).length;
   }, [data]);
 
@@ -104,11 +104,11 @@ export default function Home() {
       });
     }
 
-    // 3.5. Priority stocks filter (선행 PER <= 10 & 현재 PER >= 25)
+    // 3.5. Priority stocks filter (선행 PER <= 10 & 현재 PER >= 20)
     if (showPriorityOnly) {
       result = result.filter(d => 
         d['선행 PER'] !== null && d['선행 PER'] <= 10 &&
-        d['현재 PER'] !== null && d['현재 PER'] >= 25
+        d['현재 PER'] !== null && d['현재 PER'] >= 20
       );
     }
 
@@ -193,7 +193,7 @@ export default function Home() {
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-              <Filter className="w-6 h-6 text-blue-600" /> Delta PER
+              <Filter className="w-6 h-6 text-blue-600" /> Delta-PER (KR)
             </h1>
             <p className="text-xs text-slate-500 mt-2">최근 업데이트: {scrapeTime || '-'}</p>
           </div>
@@ -235,7 +235,7 @@ export default function Home() {
               </span>
             </button>
             <p className="text-[11px] text-amber-600 dark:text-amber-400/80 -mt-2 px-1 leading-normal">
-              ※ 선행 PER 10 이하 & 현재 PER 25 이상
+              ※ 선행 PER 10 이하 & 현재 PER 20 이상
             </p>
 
             <label className="flex items-center gap-2 cursor-pointer text-sm font-medium pt-2">
@@ -343,8 +343,8 @@ export default function Home() {
           <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-100 dark:border-indigo-900/50 p-3.5 rounded-xl flex items-start gap-2.5">
             <Info className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
             <div className="text-xs md:text-sm text-indigo-900 dark:text-indigo-200">
-              <strong className="font-semibold block mb-0.5">Delta PER 이란?</strong>
-              현재 PER - 선행(추정) PER. 값이 클수록 투자 가치가 높음.
+              <strong className="font-semibold block mb-0.5">Delta-PER (KR) 이란?</strong>
+              현재 PER - 선행(추정) PER. 값이 클수록 투자 가치가 높음. (우선고려 조건: 현재 PER 20 이상 & 선행 PER 10 이하)
             </div>
           </div>
         </div>
@@ -399,7 +399,7 @@ export default function Home() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     {filteredData.map((row, idx) => {
                       const isPriority = row['선행 PER'] !== null && row['선행 PER'] <= 10 && 
-                                         row['현재 PER'] !== null && row['현재 PER'] >= 25;
+                                         row['현재 PER'] !== null && row['현재 PER'] >= 20;
                       return (
                         <tr 
                           key={`${row.종목코드}-${idx}`} 
