@@ -25,6 +25,9 @@ export interface FinancialData {
   부채비율: number | null;
   이익성장률: number | null;
   DeltaPER: number | null;
+  '20일선': number | null;
+  '120일선': number | null;
+  '골든크로스': boolean | null;
 }
 
 const HEADERS = {
@@ -80,6 +83,55 @@ async function fetchUtf8Html(url: string): Promise<string> {
   const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   return await response.text();
+}
+
+// Helper to fetch Naver Stock Chart XML data
+export async function fetchChartData(code: string, count: number = 300): Promise<{ dates: string[]; prices: number[] }> {
+  try {
+    const url = `https://fchart.stock.naver.com/sise.nhn?symbol=${code}&timeframe=day&count=${count}&requestType=0`;
+    const response = await axios.get(url, { headers: HEADERS, timeout: 5000 });
+    const $ = cheerio.load(response.data, { xmlMode: true });
+    const prices: number[] = [];
+    const dates: string[] = [];
+
+    $('item').each((_, el) => {
+      const data = $(el).attr('data');
+      if (data) {
+        const parts = data.split('|');
+        const dateStr = parts[0]; // YYYYMMDD
+        const close = parseFloat(parts[4]); // 종가
+        
+        prices.push(close);
+        dates.push(`${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`);
+      }
+    });
+
+    return { dates, prices };
+  } catch (error) {
+    console.error(`Error fetching chart data for ${code}:`, error);
+    return { dates: [], prices: [] };
+  }
+}
+
+export function calculateSMA(prices: number[], period: number): number | null {
+  if (prices.length < period) return null;
+  const slice = prices.slice(prices.length - period);
+  const sum = slice.reduce((a, b) => a + b, 0);
+  return Number((sum / period).toFixed(2));
+}
+
+export function calculateSMASeries(prices: number[], period: number): (number | null)[] {
+  const series: (number | null)[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    if (i < period - 1) {
+      series.push(null);
+    } else {
+      const slice = prices.slice(i - period + 1, i + 1);
+      const sum = slice.reduce((a, b) => a + b, 0);
+      series.push(Number((sum / period).toFixed(2)));
+    }
+  }
+  return series;
 }
 
 async function fetchTickerPage(sosok: number, page: number): Promise<TickerInfo[]> {
@@ -145,6 +197,9 @@ export async function getFinancialData(ticker: TickerInfo): Promise<FinancialDat
     부채비율: null,
     이익성장률: null,
     DeltaPER: null,
+    '20일선': null,
+    '120일선': null,
+    '골든크로스': null,
   };
 
   try {
@@ -247,6 +302,46 @@ export async function scrapeAllData(force: boolean = false): Promise<{ data: Fin
   results.forEach((item, idx) => {
     item.번호 = idx + 1;
   });
+
+  // Calculate SMA 20/120 and Golden Cross for candidates (DeltaPER > 0)
+  console.log('Calculating SMA 20/120 and Golden Cross for candidates (DeltaPER > 0)...');
+  const candidates = results.filter(item => item.DeltaPER !== null && item.DeltaPER > 0);
+  console.log(`Found ${candidates.length} candidate stocks out of ${results.length}.`);
+
+  for (let i = 0; i < candidates.length; i += limit) {
+    const chunk = candidates.slice(i, i + limit);
+    await Promise.all(chunk.map(async (item) => {
+      const { prices } = await fetchChartData(item.종목코드, 300);
+      if (prices && prices.length >= 120) {
+        const sma20 = calculateSMASeries(prices, 20);
+        const sma120 = calculateSMASeries(prices, 120);
+        const len = prices.length;
+        
+        const todaySma20 = sma20[len - 1];
+        const todaySma120 = sma120[len - 1];
+        
+        if (todaySma20 !== null && todaySma120 !== null) {
+          item['20일선'] = todaySma20;
+          item['120일선'] = todaySma120;
+          
+          // Check if 20 SMA crossed above 120 SMA within the last 10 trading days
+          let crossedRecently = false;
+          if (todaySma20 > todaySma120) {
+            const lookback = Math.min(10, len - 120);
+            for (let k = 1; k <= lookback; k++) {
+              const prevSma20 = sma20[len - 1 - k];
+              const prevSma120 = sma120[len - 1 - k];
+              if (prevSma20 !== null && prevSma120 !== null && prevSma20 <= prevSma120) {
+                crossedRecently = true;
+                break;
+              }
+            }
+          }
+          item['골든크로스'] = crossedRecently;
+        }
+      }
+    }));
+  }
 
   const scrapeTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
   const finalResult = { data: results, scrapeTime };

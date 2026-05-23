@@ -21,7 +21,7 @@ test.describe('Delta-PER (KR) Dashboard UX Tests', () => {
 
     // 3. Verify table exists with correct headers
     const tableHeaders = page.locator('thead tr th');
-    await expect(tableHeaders).toHaveCount(9);
+    await expect(tableHeaders).toHaveCount(10);
     
     // Check key headers
     await expect(tableHeaders.nth(1)).toContainText('종목명');
