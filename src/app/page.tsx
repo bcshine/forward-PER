@@ -353,6 +353,105 @@ function StockChart({ code, name }: { code: string; name: string }) {
   );
 }
 
+function SouthKoreaFlagSvg({ className = "w-6 h-4" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 36 24"
+      className={className}
+    >
+      <rect width="36" height="24" fill="#ffffff" rx="2" />
+      <g transform="translate(18, 12)">
+        <path d="M -8,0 A 8,8 0 0,1 8,0 A 4,4 0 0,1 0,0 A 4,4 0 0,0 -8,0" fill="#cd2e3a" />
+        <path d="M 8,0 A 8,8 0 0,1 -8,0 A 4,4 0 0,1 0,0 A 4,4 0 0,0 8,0" fill="#0047a0" />
+      </g>
+      <g transform="translate(18, 12) rotate(-33.69)">
+        <rect x="-13" y="-7.5" width="1" height="5" fill="#000000" />
+        <rect x="-11.5" y="-7.5" width="1" height="5" fill="#000000" />
+        <rect x="-10" y="-7.5" width="1" height="5" fill="#000000" />
+      </g>
+      <g transform="translate(18, 12) rotate(-33.69)">
+        <rect x="9" y="-7.5" width="1" height="2" fill="#000000" />
+        <rect x="9" y="-4.5" width="1" height="2" fill="#000000" />
+        <rect x="10.5" y="-7.5" width="1" height="2" fill="#000000" />
+        <rect x="10.5" y="-4.5" width="1" height="2" fill="#000000" />
+        <rect x="12" y="-7.5" width="1" height="2" fill="#000000" />
+        <rect x="12" y="-4.5" width="1" height="2" fill="#000000" />
+      </g>
+      <g transform="translate(18, 12) rotate(33.69)">
+        <rect x="-13" y="2.5" width="1" height="5" fill="#000000" />
+        <rect x="-11.5" y="2.5" width="1" height="2" fill="#000000" />
+        <rect x="-11.5" y="5.5" width="1" height="2" fill="#000000" />
+        <rect x="-10" y="2.5" width="1" height="5" fill="#000000" />
+      </g>
+      <g transform="translate(18, 12) rotate(33.69)">
+        <rect x="9" y="2.5" width="1" height="2" fill="#000000" />
+        <rect x="9" y="5.5" width="1" height="2" fill="#000000" />
+        <rect x="10.5" y="2.5" width="1" height="5" fill="#000000" />
+        <rect x="12" y="2.5" width="1" height="2" fill="#000000" />
+        <rect x="12" y="5.5" width="1" height="2" fill="#000000" />
+      </g>
+    </svg>
+  );
+}
+
+function formatMcap(mcap: number | null): string {
+  if (mcap === null) return '-';
+  if (mcap >= 10000) {
+    const cho = Math.floor(mcap / 10000);
+    const eok = mcap % 10000;
+    return eok > 0 ? `${cho}조 ${eok.toLocaleString()}억원` : `${cho}조원`;
+  }
+  return `${mcap.toLocaleString()}억원`;
+}
+
+function generateQuantOpinion(stock: FinancialData): string {
+  const mcapStr = formatMcap(stock['시가총액(억)']);
+  const forwardPer = stock['선행 PER'];
+  const currentPer = stock['현재 PER'];
+  const goldenCross = stock['골든크로스'];
+
+  let segment1 = '';
+  if (stock['시가총액(억)'] !== null) {
+    if (stock['시가총액(억)'] >= 100000) {
+      segment1 = `이 종목은 시가총액 ${mcapStr}의 한국 주식 시장 지배력을 갖춘 초대형 기업으로, `;
+    } else if (stock['시가총액(억)'] >= 10000) {
+      segment1 = `이 종목은 시가총액 ${mcapStr}의 견고한 시장 지위를 확보한 대형 기업으로, `;
+    } else {
+      segment1 = `이 종목은 시가총액 ${mcapStr} 규모의 중소형 기업으로, `;
+    }
+  } else {
+    segment1 = `이 종목은 한국 주식 시장에 상장된 기업으로, `;
+  }
+
+  let segment2 = '';
+  if (forwardPer !== null && currentPer !== null) {
+    const diff = currentPer - forwardPer;
+    if (diff > 5) {
+      segment2 = `현재 선행 PER(${forwardPer})이 현재 PER(${currentPer})보다 현저히 낮아 확실한 이익 모멘텀 개선을 가리키고 있습니다.`;
+    } else if (diff > 0) {
+      segment2 = `선행 PER(${forwardPer})이 현재 PER(${currentPer})보다 낮아 향후 점진적인 수익성 개선이 예상됩니다.`;
+    } else if (diff < 0) {
+      segment2 = `선행 PER(${forwardPer})이 현재 PER(${currentPer})보다 높아 향후 단기 실적 둔화 우려 혹은 밸류에이션 부담이 가중될 수 있습니다.`;
+    } else {
+      segment2 = `선행 PER(${forwardPer})과 현재 PER(${currentPer})이 대등한 수준을 보이며 안정적인 실적 흐름을 유지하고 있습니다.`;
+    }
+  } else {
+    segment2 = `일부 PER 지표의 결측으로 인해 다각적인 밸류에이션 추세 분석이 제한적입니다.`;
+  }
+
+  let segment3 = '';
+  if (goldenCross === true) {
+    segment3 = `최근 20일 단기 이동평균선이 120일 장기 이동평균선을 돌파하는 기술적 골든크로스 신호가 포착되었습니다. 이는 중장기적 상승 추세로의 전환을 시사하므로 긍정적인 기술적 진입 기회로 검토해볼 수 있습니다.`;
+  } else if (goldenCross === false) {
+    segment3 = `이익 턴어라운드는 감지되었으나 가격 추세가 아직 120일 장기 이평선 돌파에 이르는 기술적 골든크로스 신호에는 도달하지 않았습니다. 기술적 진입 시점을 대기 리스트에 올려두고 관망할 필요가 있습니다.`;
+  } else {
+    segment3 = `주가 이동평균선 추세 분석을 위한 충분한 역사적 가격 데이터가 확보되지 않아 기술적 판단을 보류합니다.`;
+  }
+
+  return `${segment1}${segment2}\n\n${segment3}`;
+}
+
 export default function Home() {
   const [data, setData] = useState<FinancialData[]>([]);
   const [scrapeTime, setScrapeTime] = useState<string>('');
@@ -556,7 +655,7 @@ export default function Home() {
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-              <Filter className="w-6 h-6 text-blue-600" /> Delta-PER (KR)
+              <SouthKoreaFlagSvg className="w-7 h-5 rounded-sm border border-slate-200 dark:border-slate-850 shadow-sm shrink-0" /> Delta-PER (KR)
             </h1>
             <p className="text-xs text-slate-500 mt-2">최근 업데이트: {scrapeTime || '-'}</p>
           </div>
@@ -994,6 +1093,19 @@ export default function Home() {
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="h-px bg-slate-200 dark:bg-slate-800" />
+
+                  {/* Antigravity Quant Strategy Opinion */}
+                  <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/15 text-emerald-900 dark:text-emerald-300">
+                    <div className="flex items-center gap-2 mb-2 font-bold text-sm text-emerald-800 dark:text-emerald-400">
+                      <span className="text-base">💡</span>
+                      <span>Antigravity의 퀀트 전략 분석 의견</span>
+                    </div>
+                    <p className="text-xs md:text-sm leading-relaxed whitespace-pre-line font-medium opacity-95">
+                      {generateQuantOpinion(selectedStock)}
+                    </p>
                   </div>
                 </div>
 
